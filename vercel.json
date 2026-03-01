@@ -1,11 +1,5 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "index.html", "use": "@vercel/static" }
-  ],
-  "routes": [
-    { "src": "^/assets/(.*)$", "dest": "/assets/$1" },
-    { "handle": "filesystem" },
-    { "src": "^/(.*)$", "dest": "/index.html" }
-  ]
+  "buildCommand": "echo 'Static site - no build needed'",
+  "outputDirectory": "."
 }
