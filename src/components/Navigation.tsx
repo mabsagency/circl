@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 import styles from '@/styles/Navigation.module.css'
 
 export default function Navigation() {
-  const navRef = useRef<HTMLElement>(null)
+  const navRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {

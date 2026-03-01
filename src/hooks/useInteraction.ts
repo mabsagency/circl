@@ -1,8 +1,8 @@
 // Hook pour IntersectionObserver (lazy load)
 import { useEffect, useRef, useState } from 'react'
 
-export function useIntersection<T extends Element = HTMLElement>(options = { threshold: 0.15 }) {
-  const ref = useRef<T | null>(null)
+export function useIntersection(options = { threshold: 0.15 }) {
+  const ref = useRef<HTMLDivElement>(null)
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
@@ -14,8 +14,7 @@ export function useIntersection<T extends Element = HTMLElement>(options = { thr
     }, options)
 
     if (ref.current) {
-      // ref.current is typed as T | null where T extends Element
-      observer.observe(ref.current as Element)
+      observer.observe(ref.current)
     }
 
     return () => observer.disconnect()
