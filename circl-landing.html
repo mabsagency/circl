@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Circl — The Accountability Circle</title>
+<link rel="icon" type="image/png" href="/assets/logo2.png" sizes="any">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════
+   RESET & ROOT
+════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#030308;
+  --bg2:#07070F;
+  --navy:#0D0C1F;
+  --purple:#9333EA;
+  --purple-light:#B060FF;
+  --blue:#38BDF8;
+  --cyan:#00CFFF;
+  --green:#3DD68C;
+  --text:#F0EEFF;
+  --sub:#8B89B0;
+  --muted:#3E3C5A;
+}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Outfit',sans-serif;
+  min-height:100vh;
+  cursor:none;
+  overflow-x:hidden;
+}
+
+/* ════════════════════════════════════════
+   CUSTOM CURSOR
+════════════════════════════════════════ */
+#cursor{
+  position:fixed;width:12px;height:12px;
+  background:var(--cyan);border-radius:50%;
+  pointer-events:none;z-index:9999;
+  transition:transform .15s,background .2s;
+  mix-blend-mode:screen;
+  transform:translate(-50%,-50%);
+}
+#cursor-trail{
+  position:fixed;width:36px;height:36px;
+  border:1.5px solid rgba(56,189,248,.4);
+  border-radius:50%;pointer-events:none;z-index:9998;
+  transform:translate(-50%,-50%);
+  transition:left .12s,top .12s,transform .2s,border-color .2s;
+}
+body:hover #cursor{opacity:1}
+
+/* ════════════════════════════════════════
+   CANVAS — particles
+════════════════════════════════════════ */
+#canvas{
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;opacity:.55;
+}
+
+/* ════════════════════════════════════════
+   NOISE OVERLAY
+════════════════════════════════════════ */
+body::before{
+  content:'';position:fixed;inset:0;z-index:1;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");
+  pointer-events:none;opacity:.4;
+}
+
+/* ════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 48px;
+  transition:all .4s;
+}
+nav.scrolled{
+  background:rgba(3,3,8,.7);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,.05);
+  padding:14px 48px;
+}
+.nav-logo{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Syne',sans-serif;
+  font-size:22px;font-weight:800;
+  letter-spacing:-.5px;
+}
+.nav-logo img{width:34px;height:34px;border-radius:10px}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{
+  font-size:14px;font-weight:500;color:var(--sub);
+  text-decoration:none;transition:color .25s;
+  position:relative;
+}
+.nav-links a::after{
+  content:'';position:absolute;bottom:-3px;left:0;
+  width:0;height:1.5px;background:var(--cyan);
+  transition:width .3s;
+}
+.nav-links a:hover{color:var(--text)}
+.nav-links a:hover::after{width:100%}
+.nav-cta{
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  border:none;border-radius:24px;padding:10px 22px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  color:white;cursor:none;transition:all .3s;
+  box-shadow:0 0 24px rgba(56,189,248,.25);
+}
+.nav-cta:hover{
+  transform:translateY(-2px);
+  box-shadow:0 0 40px rgba(56,189,248,.4);
+}
+
+/* ════════════════════════════════════════
+   HERO
+════════════════════════════════════════ */
+#hero{
+  position:relative;z-index:2;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;text-align:center;
+  padding:120px 24px 80px;
+  overflow:hidden;
+}
+
+/* Background orbs */
+.orb{
+  position:absolute;border-radius:50%;
+  filter:blur(80px);pointer-events:none;
+}
+.orb-1{
+  width:600px;height:600px;
+  top:-150px;left:-100px;
+  background:radial-gradient(circle,rgba(147,51,234,.25),transparent 70%);
+  animation:orbFloat1 12s ease-in-out infinite;
+}
+.orb-2{
+  width:500px;height:500px;
+  bottom:-100px;right:-80px;
+  background:radial-gradient(circle,rgba(0,207,255,.2),transparent 70%);
+  animation:orbFloat2 15s ease-in-out infinite;
+}
+.orb-3{
+  width:300px;height:300px;
+  top:40%;left:55%;
+  background:radial-gradient(circle,rgba(61,214,140,.12),transparent 70%);
+  animation:orbFloat3 18s ease-in-out infinite;
+}
+@keyframes orbFloat1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(60px,40px) scale(1.1)}}
+@keyframes orbFloat2{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-50px,30px) scale(1.05)}}
+@keyframes orbFloat3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-45%,-55%) scale(1.2)}}
+
+/* Hero badge */
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  border:1px solid rgba(56,189,248,.3);
+  background:rgba(56,189,248,.06);
+  border-radius:30px;padding:6px 16px;
+  font-size:12px;font-weight:600;color:var(--cyan);
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:36px;
+  animation:fadeSlideDown .8s ease both;
+}
+.badge-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:var(--cyan);
+  box-shadow:0 0 8px var(--cyan);
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+
+/* Logo 3D container */
+.logo-3d-wrap{
+  position:relative;
+  width:180px;height:180px;
+  margin:0 auto 40px;
+  animation:fadeSlideUp .9s ease .1s both;
+}
+.logo-orbit{
+  position:absolute;inset:-40px;
+  border-radius:50%;
+  border:1px dashed rgba(56,189,248,.18);
+  animation:orbitSpin 20s linear infinite;
+}
+.logo-orbit-2{
+  position:absolute;inset:-70px;
+  border-radius:50%;
+  border:1px dashed rgba(147,51,234,.14);
+  animation:orbitSpin 30s linear infinite reverse;
+}
+.orbit-dot{
+  position:absolute;top:50%;left:0;
+  width:8px;height:8px;border-radius:50%;
+  background:var(--cyan);
+  transform:translateY(-50%);
+  box-shadow:0 0 12px var(--cyan);
+}
+.orbit-dot-2{
+  position:absolute;top:0;left:50%;
+  width:6px;height:6px;border-radius:50%;
+  background:var(--purple-light);
+  transform:translateX(-50%);
+  box-shadow:0 0 10px var(--purple-light);
+}
+@keyframes orbitSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+.logo-glow{
+  position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle,rgba(147,51,234,.3),rgba(0,207,255,.15),transparent 70%);
+  animation:logoGlowPulse 3s ease-in-out infinite;
+  filter:blur(10px);
+}
+@keyframes logoGlowPulse{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.2);opacity:1}}
+
+.logo-img{
+  position:relative;z-index:2;
+  width:100%;height:100%;
+  object-fit:contain;
+  border-radius:32px;
+  filter:drop-shadow(0 0 30px rgba(147,51,234,.6)) drop-shadow(0 0 60px rgba(0,207,255,.3));
+  animation:logoFloat 6s ease-in-out infinite;
+}
+@keyframes logoFloat{
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  33%{transform:translateY(-12px) rotate(2deg)}
+  66%{transform:translateY(-6px) rotate(-1deg)}
+}
+
+/* Hero text */
+.hero-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(52px,8vw,96px);
+  font-weight:800;
+  line-height:.95;
+  letter-spacing:-3px;
+  margin-bottom:24px;
+  animation:fadeSlideUp 1s ease .2s both;
+}
+.hero-title .line{display:block}
+.hero-title .grad{
+  background:linear-gradient(135deg,var(--purple-light) 0%,var(--cyan) 50%,var(--green) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-size:200% 200%;
+  animation:gradShift 4s ease infinite;
+}
+@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+.hero-sub{
+  font-size:clamp(16px,2.5vw,20px);
+  color:var(--sub);font-weight:400;
+  max-width:540px;line-height:1.6;
+  margin:0 auto 48px;
+  animation:fadeSlideUp 1s ease .3s both;
+}
+.hero-sub strong{color:var(--text);font-weight:600}
+
+.hero-actions{
+  display:flex;gap:16px;align-items:center;justify-content:center;
+  flex-wrap:wrap;
+  animation:fadeSlideUp 1s ease .4s both;
+}
+.btn-primary{
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  border:none;border-radius:50px;
+  padding:16px 40px;
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;
+  color:white;cursor:none;
+  box-shadow:0 10px 40px rgba(147,51,234,.4),0 2px 0 rgba(255,255,255,.1) inset;
+  transition:all .35s;
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.2),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.btn-primary:hover{
+  transform:translateY(-3px) scale(1.02);
+  box-shadow:0 20px 60px rgba(147,51,234,.5),0 2px 0 rgba(255,255,255,.1) inset;
+}
+.btn-primary:hover::before{opacity:1}
+
+.btn-secondary{
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:50px;padding:15px 32px;
+  font-family:'Outfit',sans-serif;font-size:16px;font-weight:600;
+  color:var(--text);cursor:none;
+  backdrop-filter:blur(10px);
+  transition:all .3s;
+}
+.btn-secondary:hover{
+  background:rgba(255,255,255,.1);
+  border-color:rgba(56,189,248,.4);
+  transform:translateY(-2px);
+}
+
+/* Social quick links */
+.hero-social{
+  display:flex;flex-direction:column;gap:14px;align-items:center;
+  justify-content:center;margin-top:56px;
+  animation:fadeSlideUp 1s ease .55s both;
+}
+
+.social-icons{display:flex;gap:14px;}
+
+.social-icon{
+  width:46px;height:46px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  text-decoration:none;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.04);
+  backdrop-filter:blur(10px);
+  transition:all .3s;
+  position:relative;overflow:hidden;
+}
+.social-icon::before{
+  content:'';position:absolute;inset:0;border-radius:50%;
+  opacity:0;transition:opacity .3s;
+}
+.social-icon.tiktok::before{background:radial-gradient(circle,rgba(0,242,234,.2),transparent)}
+.social-icon.instagram::before{background:radial-gradient(circle,rgba(225,48,108,.2),transparent)}
+.social-icon:hover{transform:translateY(-4px) scale(1.1)}
+.social-icon:hover::before{opacity:1}
+.social-icon svg{width:20px;height:20px;position:relative;z-index:1}
+
+/* Scroll indicator */
+.scroll-hint{
+  position:absolute;bottom:36px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  color:var(--muted);font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  animation:fadeSlideUp 1s ease .7s both;
+}
+.scroll-line{
+  width:1px;height:50px;
+  background:linear-gradient(to bottom,var(--muted),transparent);
+  animation:scrollAnim 2s ease-in-out infinite;
+}
+@keyframes scrollAnim{0%{transform:scaleY(0);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}51%{transform:scaleY(1);transform-origin:bottom}100%{transform:scaleY(0);transform-origin:bottom}}
+
+/* ════════════════════════════════════════
+   STATS BAR
+════════════════════════════════════════ */
+#stats{
+  position:relative;z-index:2;
+  padding:40px 48px;
+  background:rgba(255,255,255,.02);
+  border-top:1px solid rgba(255,255,255,.05);
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+.stats-inner{
+  max-width:1100px;margin:0 auto;
+  display:flex;justify-content:space-around;
+  flex-wrap:wrap;gap:32px;
+}
+.stat-item{
+  text-align:center;
+  opacity:0;transform:translateY(20px);
+  transition:all .6s;
+}
+.stat-item.visible{opacity:1;transform:translateY(0)}
+.stat-num{
+  font-family:'Syne',sans-serif;
+  font-size:40px;font-weight:800;
+  background:linear-gradient(135deg,var(--purple-light),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  line-height:1;margin-bottom:6px;
+}
+.stat-label{font-size:13px;color:var(--sub);font-weight:500;letter-spacing:.5px}
+
+/* ════════════════════════════════════════
+   FEATURES
+════════════════════════════════════════ */
+#features{
+  position:relative;z-index:2;
+  padding:120px 48px;
+  max-width:1200px;margin:0 auto;
+}
+.section-tag{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:700;letter-spacing:3px;
+  color:var(--purple-light);text-transform:uppercase;
+  margin-bottom:20px;
+}
+.section-tag::before{content:'';width:24px;height:1.5px;background:var(--purple-light)}
+.section-title{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(36px,5vw,56px);
+  font-weight:800;letter-spacing:-2px;
+  line-height:1.05;margin-bottom:16px;
+}
+.section-sub{font-size:17px;color:var(--sub);max-width:480px;line-height:1.6}
+
+.features-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:20px;margin-top:64px;
+}
+.feat-card{
+  position:relative;overflow:hidden;
+  background:rgba(13,12,31,.6);
+  border:1px solid rgba(255,255,255,.07);
+  border-radius:24px;padding:36px;
+  backdrop-filter:blur(20px);
+  transition:all .4s;
+  cursor:none;
+  opacity:0;transform:translateY(40px);
+}
+.feat-card.visible{opacity:1;transform:translateY(0)}
+.feat-card::before{
+  content:'';position:absolute;inset:0;border-radius:24px;
+  background:linear-gradient(135deg,rgba(255,255,255,.04),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.feat-card:hover{
+  transform:translateY(-8px) scale(1.01);
+  border-color:rgba(147,51,234,.35);
+  box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px rgba(147,51,234,.1);
+}
+.feat-card:hover::before{opacity:1}
+
+/* 3D tilt effect via JS */
+.feat-card{transform-style:preserve-3d}
+
+.feat-card-glow{
+  position:absolute;
+  width:200px;height:200px;
+  border-radius:50%;filter:blur(60px);
+  pointer-events:none;opacity:0;
+  transition:opacity .4s;
+  transform:translate(-50%,-50%);
+  top:50%;left:50%;
+}
+.feat-card:hover .feat-card-glow{opacity:.6}
+
+.feat-icon{
+  width:56px;height:56px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;margin-bottom:24px;
+  position:relative;
+}
+.feat-icon::after{
+  content:'';position:absolute;inset:-1px;border-radius:17px;
+  background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.02));
+}
+.fi-1{background:rgba(147,51,234,.15);box-shadow:0 0 24px rgba(147,51,234,.2)}
+.fi-2{background:rgba(56,189,248,.12);box-shadow:0 0 24px rgba(56,189,248,.15)}
+.fi-3{background:rgba(61,214,140,.12);box-shadow:0 0 24px rgba(61,214,140,.15)}
+.fi-4{background:rgba(245,166,35,.1);box-shadow:0 0 24px rgba(245,166,35,.1)}
+.fi-5{background:rgba(244,114,182,.1);box-shadow:0 0 24px rgba(244,114,182,.1)}
+.fi-6{background:rgba(129,140,248,.1);box-shadow:0 0 24px rgba(129,140,248,.1)}
+
+.feat-title{
+  font-family:'Syne',sans-serif;
+  font-size:20px;font-weight:700;
+  margin-bottom:10px;letter-spacing:-.4px;
+}
+.feat-desc{font-size:14px;color:var(--sub);line-height:1.65}
+.feat-tag{
+  display:inline-flex;margin-top:20px;
+  font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;padding:4px 10px;border-radius:20px;
+}
+.ft-new{background:rgba(61,214,140,.12);color:var(--green);border:1px solid rgba(61,214,140,.25)}
+.ft-ai{background:rgba(147,51,234,.12);color:var(--purple-light);border:1px solid rgba(147,51,234,.25)}
+.ft-live{background:rgba(56,189,248,.1);color:var(--blue);border:1px solid rgba(56,189,248,.25)}
+
+/* ════════════════════════════════════════
+   PHONE SHOWCASE
+════════════════════════════════════════ */
+#showcase{
+  position:relative;z-index:2;
+  padding:80px 48px 120px;
+  overflow:hidden;
+}
+.showcase-inner{
+  max-width:1200px;margin:0 auto;
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:80px;align-items:center;
+}
+.showcase-text{}
+.showcase-phones{
+  position:relative;
+  display:flex;justify-content:center;align-items:flex-end;
+  gap:-20px;
+  height:520px;
+}
+
+/* Phone mockup */
+.phone-mock{
+  width:210px;
+  background:#08070F;
+  border-radius:40px;
+  border:2px solid rgba(255,255,255,.1);
+  padding:16px;
+  box-shadow:
+    0 60px 120px rgba(0,0,0,.8),
+    0 20px 40px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.08);
+  position:relative;
+  flex-shrink:0;
+}
+.phone-mock-1{
+  transform:rotate(-8deg) translateX(20px);
+  z-index:1;
+  animation:phoneFloat1 7s ease-in-out infinite;
+}
+.phone-mock-2{
+  transform:rotate(5deg) translateX(-20px) translateY(-30px);
+  z-index:2;
+  animation:phoneFloat2 9s ease-in-out infinite .5s;
+  border-color:rgba(147,51,234,.4);
+  box-shadow:
+    0 60px 120px rgba(0,0,0,.8),
+    0 0 0 1px rgba(147,51,234,.15),
+    0 0 60px rgba(147,51,234,.15);
+}
+@keyframes phoneFloat1{0%,100%{transform:rotate(-8deg) translateX(20px) translateY(0)}50%{transform:rotate(-6deg) translateX(20px) translateY(-15px)}}
+@keyframes phoneFloat2{0%,100%{transform:rotate(5deg) translateX(-20px) translateY(-30px)}50%{transform:rotate(7deg) translateX(-20px) translateY(-45px)}}
+
+.phone-notch{
+  width:60px;height:18px;background:#000;
+  border-radius:20px;margin:0 auto 12px;
+}
+.phone-screen{
+  background:var(--navy);
+  border-radius:28px;overflow:hidden;
+  aspect-ratio:9/19.5;
+}
+.ps-grad{
+  width:100%;height:100%;
+  background:linear-gradient(160deg,#110E2D,#1A0F35 40%,#0E1A2E);
+  position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.ps-orb{
+  position:absolute;border-radius:50%;
+}
+.ps-topbar{
+  padding:8px 12px 0;
+  display:flex;justify-content:space-between;align-items:center;
+  font-size:9px;font-weight:700;color:rgba(255,255,255,.7);
+  flex-shrink:0;
+}
+.ps-content{padding:8px 12px;flex:1;display:flex;flex-direction:column;gap:7px}
+.ps-title{
+  font-family:'Syne',sans-serif;
+  font-size:15px;font-weight:800;
+  background:linear-gradient(90deg,var(--purple-light),var(--cyan));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.ps-card{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:12px;padding:9px 10px;
+}
+.ps-score{
+  display:flex;justify-content:space-between;align-items:center;
+}
+.ps-score-num{font-size:16px;font-weight:800;color:var(--cyan)}
+.ps-streak{font-size:11px;font-weight:700;color:#F5A623}
+.ps-bar-wrap{margin-top:6px}
+.ps-bar-track{height:4px;background:rgba(255,255,255,.1);border-radius:10px;overflow:hidden}
+.ps-bar-fill{height:100%;width:65%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:10px}
+.ps-bar-label{font-size:7px;color:rgba(255,255,255,.4);margin-top:3px;display:flex;justify-content:space-between}
+.ps-members{display:flex;gap:-4px;margin-top:2px}
+.ps-av{
+  width:20px;height:20px;border-radius:50%;
+  border:1.5px solid rgba(13,12,31,.8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:800;color:white;
+  margin-left:-4px;
+}
+.ps-av:first-child{margin-left:0}
+.ps-ci{
+  background:linear-gradient(135deg,rgba(147,51,234,.15),rgba(56,189,248,.08));
+  border:1px solid rgba(147,51,234,.3);
+  border-radius:10px;padding:8px 10px;
+}
+.ps-ci-label{font-size:8px;font-weight:700;color:var(--purple-light);margin-bottom:4px}
+.ps-ci-q{font-size:9px;color:rgba(255,255,255,.7);line-height:1.4}
+
+/* showcase phone 2 — chat */
+.chat-msg{display:flex;flex-direction:column;gap:6px}
+.msg-them{
+  background:rgba(255,255,255,.07);border-radius:11px 11px 11px 3px;
+  padding:6px 9px;font-size:8px;color:rgba(255,255,255,.8);
+  width:fit-content;max-width:80%;line-height:1.4;
+}
+.msg-me{
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  border-radius:11px 11px 3px 11px;
+  padding:6px 9px;font-size:8px;color:white;
+  width:fit-content;max-width:80%;
+  align-self:flex-end;line-height:1.4;
+  box-shadow:0 3px 10px rgba(56,189,248,.2);
+}
+.msg-author{font-size:7px;font-weight:800;color:var(--cyan);margin-bottom:1px}
+.chat-input{
+  display:flex;gap:6px;align-items:center;
+  padding:8px 12px;
+  background:rgba(255,255,255,.04);
+  border-top:1px solid rgba(255,255,255,.05);
+  flex-shrink:0;
+}
+.chat-field{
+  flex:1;background:rgba(255,255,255,.07);border-radius:14px;
+  padding:5px 10px;font-size:8px;color:rgba(255,255,255,.4);
+}
+.chat-send{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--purple),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;
+}
+
+.showcase-list{
+  display:flex;flex-direction:column;gap:20px;margin-top:40px;
+}
+.showcase-item{
+  display:flex;align-items:flex-start;gap:16px;
+  opacity:0;transform:translateX(-30px);
+  transition:all .5s;
+}
+.showcase-item.visible{opacity:1;transform:translateX(0)}
+.si-icon{
+  width:44px;height:44px;border-radius:12px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+}
+.si-1{background:rgba(147,51,234,.15)}
+.si-2{background:rgba(56,189,248,.12)}
+.si-3{background:rgba(61,214,140,.12)}
+.si-title{font-size:15px;font-weight:700;margin-bottom:3px}
+.si-desc{font-size:13px;color:var(--sub);line-height:1.5}
+
+/* ════════════════════════════════════════
+   COMMUNITY / SOCIAL PROOF
+════════════════════════════════════════ */
+#community{
+  position:relative;z-index:2;
+  padding:100px 48px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(147,51,234,.08),transparent 60%);
+}
+.community-inner{
+  max-width:1100px;margin:0 auto;text-align:center;
+}
+.avatars-grid{
+  display:flex;justify-content:center;gap:-12px;
+  margin:40px auto 24px;
+}
+.av-big{
+  width:56px;height:56px;border-radius:50%;
+  border:2.5px solid var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:800;color:white;
+  margin-left:-12px;
+  transition:transform .3s;
+}
+.av-big:first-child{margin-left:0}
+.av-big:hover{transform:translateY(-8px) scale(1.1);z-index:10}
+.av-big img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.av-count{
+  width:56px;height:56px;border-radius:50%;
+  border:2.5px solid var(--bg);
+  background:var(--navy);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--sub);
+  margin-left:-12px;
+}
+
+/* Testimonial cards */
+.testimonials{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:16px;margin-top:56px;
+}
+.testi-card{
+  background:rgba(13,12,31,.7);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:20px;padding:28px;
+  text-align:left;
+  backdrop-filter:blur(16px);
+  transition:all .3s;
+  opacity:0;transform:translateY(30px);
+}
+.testi-card.visible{opacity:1;transform:translateY(0)}
+.testi-card:hover{
+  border-color:rgba(147,51,234,.25);
+  transform:translateY(-4px);
+}
+.testi-stars{display:flex;gap:3px;margin-bottom:12px}
+.testi-stars span{color:#F5A623;font-size:13px}
+.testi-text{font-size:14px;color:rgba(255,255,255,.75);line-height:1.65;margin-bottom:16px}
+.testi-author{display:flex;align-items:center;gap:10px}
+.testi-av{
+  width:36px;height:36px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:white;flex-shrink:0;
+}
+.testi-av img{width:100%;height:100%;border-radius:50%;object-fit:cover;}
+.testi-name{font-size:13px;font-weight:700}
+.testi-handle{font-size:11px;color:var(--sub)}
+
+/* ════════════════════════════════════════
+   CTA / DOWNLOAD
+════════════════════════════════════════ */
+#cta{
+  position:relative;z-index:2;
+  padding:80px 48px 120px;
+}
+.cta-card{
+  max-width:900px;margin:0 auto;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(147,51,234,.15),rgba(0,207,255,.08));
+  border:1px solid rgba(147,51,234,.3);
+  border-radius:32px;padding:80px 60px;
+  text-align:center;
+  backdrop-filter:blur(20px);
+}
+.cta-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(147,51,234,.2),transparent 60%);
+}
+.cta-glow{
+  position:absolute;
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(147,51,234,.15),transparent 70%);
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  filter:blur(40px);
+  animation:ctaGlow 5s ease-in-out infinite;
+}
+@keyframes ctaGlow{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.3)}}
+.cta-title{
+  position:relative;z-index:1;
+  font-family:'Syne',sans-serif;
+  font-size:clamp(36px,5vw,60px);
+  font-weight:800;letter-spacing:-2px;
+  line-height:1.05;margin-bottom:16px;
+}
+.cta-sub{
+  position:relative;z-index:1;
+  font-size:17px;color:var(--sub);
+  max-width:440px;margin:0 auto 40px;line-height:1.6;
+}
+.cta-actions{
+  position:relative;z-index:1;
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:40px;
+}
+.store-btn{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:16px;padding:14px 24px;
+  cursor:none;transition:all .3s;text-decoration:none;color:var(--text);
+}
+.store-btn:hover{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(56,189,248,.35);
+  transform:translateY(-3px);
+}
+.store-icon{font-size:28px}
+.store-icon img{width:28px;height:28px;}
+
+.store-label{text-align:left}
+.store-label .sub{font-size:10px;color:var(--sub);display:block}
+.store-label .name{font-size:15px;font-weight:700;display:block}
+
+.cta-social{
+  position:relative;z-index:1;
+  display:flex;gap:20px;justify-content:center;align-items:center;
+}
+.cta-social-link{
+  display:flex;align-items:center;gap:10px;
+  text-decoration:none;color:var(--sub);
+  font-size:13px;font-weight:600;
+  transition:color .25s;
+}
+.cta-social-link:hover{color:var(--text)}
+.cta-social-icon{
+  width:40px;height:40px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.1);
+  background:rgba(255,255,255,.05);
+  transition:all .3s;
+}
+.cta-social-link:hover .cta-social-icon{
+  border-color:rgba(56,189,248,.35);
+  background:rgba(56,189,248,.08);
+  transform:scale(1.08);
+}
+
+/* ════════════════════════════════════════
+   FOOTER
+════════════════════════════════════════ */
+footer{
+  position:relative;z-index:2;
+  padding:40px 48px;
+  border-top:1px solid rgba(255,255,255,.05);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:20px;
+}
+.footer-logo{
+  display:flex;align-items:center;gap:10px;
+  font-family:'Syne',sans-serif;font-size:18px;font-weight:800;
+}
+.footer-logo img{width:28px;height:28px;border-radius:8px}
+.footer-copy{font-size:12px;color:var(--muted)}
+.footer-links{display:flex;gap:24px}
+.footer-links a{
+  font-size:12px;color:var(--muted);text-decoration:none;
+  transition:color .25s;
+}
+.footer-links a:hover{color:var(--sub)}
+
+/* ════════════════════════════════════════
+   ANIMATIONS
+════════════════════════════════════════ */
+@keyframes fadeSlideDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeSlideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+/* ════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════ */
+@media(max-width:900px){
+  nav{padding:16px 24px}
+  .nav-links{display:none}
+  #features,#showcase,#community,#cta{padding-left:24px;padding-right:24px}
+  .showcase-inner{grid-template-columns:1fr;gap:60px}
+  .showcase-phones{display:none}
+  .cta-card{padding:48px 24px}
+  footer{flex-direction:column;text-align:center}
+  .footer-links{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div id="cursor"></div>
+<div id="cursor-trail"></div>
+
+<!-- Particle canvas -->
+<canvas id="canvas"></canvas>
+
+<!-- ══════════════ NAVIGATION ══════════════ -->
+<nav id="nav">
+  <div class="nav-logo">
+    <img src="assets/logo1.png" alt="Circl">
+    Circl
+  </div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#showcase">App</a>
+    <a href="#community">Communauté</a>
+  </div>
+  <button class="nav-cta" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Rejoindre →</button>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<section id="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="hero-badge">
+    <div class="badge-dot"></div>
+    Bêta ouverte — Rejoins maintenant
+  </div>
+
+  <div class="logo-3d-wrap">
+    <div class="logo-glow"></div>
+    <div class="logo-orbit"><div class="orbit-dot"></div></div>
+    <div class="logo-orbit-2"><div class="orbit-dot-2"></div></div>
+    <img class="logo-img" src="assets/logo1.png" alt="Circl logo">
+  </div>
+
+  <h1 class="hero-title">
+    <span class="line">Le cercle</span>
+    <span class="line grad">qui te fait</span>
+    <span class="line">avancer</span>
+  </h1>
+
+  <p class="hero-sub">
+    Circl connecte des groupes d'<strong>accountability</strong> avec un coach IA personnalisé. 
+    Check-in quotidien, streaks partagés, progrès réels.
+  </p>
+
+  <div class="hero-actions">
+    <button class="btn-primary" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">
+      Rejoindre la bêta ✦
+    </button>
+    <button class="btn-secondary" onclick="document.getElementById('showcase').scrollIntoView({behavior:'smooth'})">
+      Voir l'app →
+    </button>
+  </div>
+
+  <div class="hero-social">
+    <div class="social-icons">
+      <a href="https://www.tiktok.com/@circlapp0?_r=1&_t=ZN-94KKXVJ1Z02" target="_blank" class="social-icon tiktok" title="TikTok">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34l.01-8.42a8.16 8.16 0 0 0 4.77 1.52V4.95a4.85 4.85 0 0 1-1.02-.26z"/></svg>
+      </a>
+      <a href="https://www.instagram.com/circl_app0?igsh=MWNhMTQzYzh6MDYzbQ%3D%3D&utm_source=qr" target="_blank" class="social-icon instagram" title="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ STATS ══════════════ -->
+<div id="stats">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-num" data-target="2840">0</div>
+      <div class="stat-label">Membres actifs</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="14">0</div>
+      <div class="stat-label">Streak record (jours)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="96" data-suffix="%">0%</div>
+      <div class="stat-label">Taux de rétention</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="5">0</div>
+      <div class="stat-label">Membres par groupe</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ FEATURES ══════════════ -->
+<section id="features">
+  <div class="section-tag">Fonctionnalités</div>
+  <h2 class="section-title">Tout ce qu'il faut<br>pour <span style="background:linear-gradient(90deg,var(--purple-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent">rester dans la course</span></h2>
+  <p class="section-sub">Un écosystème complet pensé pour créer de vraies habitudes, pas juste des intentions.</p>
+
+  <div class="features-grid">
+
+    <div class="feat-card" style="transition-delay:.05s">
+      <div class="feat-card-glow" style="background:rgba(147,51,234,.7)"></div>
+      <div class="feat-icon fi-1">✦</div>
+      <h3 class="feat-title">Circl Coach IA</h3>
+      <p class="feat-desc">Un coach IA qui te connaît vraiment. Questions personnalisées, contexte mémorisé, feedback humain basé sur tes vraies données.</p>
+      <span class="feat-tag ft-ai">IA Powered</span>
+    </div>
+
+    <div class="feat-card" style="transition-delay:.1s">
+      <div class="feat-card-glow" style="background:rgba(56,189,248,.7)"></div>
+      <div class="feat-icon fi-2">💬</div>
+      <h3 class="feat-title">Chat en temps réel</h3>
+      <p class="feat-desc">Ton groupe, une conversation live. Partage tes victoires, célébrez ensemble, restez connectés quand ça compte le plus.</p>
+      <span class="feat-tag ft-live">Live</span>
+    </div>
+
+    <div class="feat-card" style="transition-delay:.15s">
+      <div class="feat-card-glow" style="background:rgba(61,214,140,.7)"></div>
+      <div class="feat-icon fi-3">🔥</div>
+      <h3 class="feat-title">Streaks collectifs</h3>
+      <p class="feat-desc">Le streak n'est plus solitaire. Quand ton groupe tient, tout le monde gagne. La pression positive qui crée de vraies habitudes.</p>
+      <span class="feat-tag ft-new">Nouveau</span>
+    </div>
+
+    <div class="feat-card" style="transition-delay:.2s">
+      <div class="feat-card-glow" style="background:rgba(245,166,35,.7)"></div>
+      <div class="feat-icon fi-4">📊</div>
+      <h3 class="feat-title">Check-in quotidien</h3>
+      <p class="feat-desc">3 étapes, 2 minutes. Humeur, énergie, note. Ton historique devient une carte de ta progression. Visible, réel, motivant.</p>
+    </div>
+
+    <div class="feat-card" style="transition-delay:.25s">
+      <div class="feat-card-glow" style="background:rgba(244,114,182,.7)"></div>
+      <div class="feat-icon fi-5">🏆</div>
+      <h3 class="feat-title">Circl Score</h3>
+      <p class="feat-desc">Un score qui reflète ton engagement réel. XP, streaks, régularité — tout compte. Grimpe dans le classement de ton groupe.</p>
+    </div>
+
+    <div class="feat-card" style="transition-delay:.3s">
+      <div class="feat-card-glow" style="background:rgba(129,140,248,.7)"></div>
+      <div class="feat-icon fi-6">👥</div>
+      <h3 class="feat-title">Groupes thématiques</h3>
+      <p class="feat-desc">Fitness, productivité, mindfulness, apprentissage — trouve ton crew ou crée le tien en 30 secondes.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════ PHONE SHOWCASE ══════════════ -->
+<section id="showcase">
+  <div class="showcase-inner">
+    <div class="showcase-text">
+      <div class="section-tag">L'app</div>
+      <h2 class="section-title" style="font-size:clamp(32px,4vw,48px)">Conçu pour<br><span style="background:linear-gradient(90deg,var(--purple-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent">l'essentiel</span></h2>
+      <p class="section-sub" style="font-size:15px;margin-bottom:0">Une interface épurée, sombre, rapide. Pas de distractions — juste toi, ton groupe, et ton objectif.</p>
+
+      <div class="showcase-list">
+        <div class="showcase-item si-vis-1">
+          <div class="si-icon si-1">⚡</div>
+          <div>
+            <div class="si-title">2 minutes par jour</div>
+            <div class="si-desc">Le check-in complet prend moins de 2 minutes. Pas d'excuse, pas de friction.</div>
+          </div>
+        </div>
+        <div class="showcase-item si-vis-2" style="transition-delay:.1s">
+          <div class="si-icon si-2">🌐</div>
+          <div>
+            <div class="si-title">Synchronisation instantanée</div>
+            <div class="si-desc">Tout ton groupe voit ton check-in en temps réel. L'accountability fonctionne.</div>
+          </div>
+        </div>
+        <div class="showcase-item si-vis-3" style="transition-delay:.2s">
+          <div class="si-icon si-3">🔒</div>
+          <div>
+            <div class="si-title">Données privées</div>
+            <div class="si-desc">Tes données restent dans ton cercle. Seuls tes membres voient ce que tu partages.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="showcase-phones">
+      <!-- Phone 1 — Home -->
+      <div class="phone-mock phone-mock-1">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="ps-grad">
+            <div style="position:absolute;width:180px;height:180px;top:-40px;left:-30px;background:radial-gradient(circle,rgba(147,51,234,.3),transparent 70%);pointer-events:none"></div>
+            <div class="ps-topbar">
+              <span>9:41</span><span>🔋</span>
+            </div>
+            <div class="ps-content">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+                <span style="font-size:12px;font-weight:900;background:linear-gradient(90deg,#B060FF,#00CFFF);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Circl</span>
+                <span style="background:rgba(56,189,248,.14);border:1px solid rgba(56,189,248,.3);border-radius:20px;padding:1px 5px;font-size:6px;font-weight:700;color:#38BDF8">BETA</span>
+              </div>
+              <div>
+                <div style="font-size:7px;color:rgba(255,255,255,.5)">Bonsoir, Théo 👋</div>
+                <div style="font-size:13px;font-weight:800;color:white;line-height:1.2">Lancer mon<br>side-project</div>
+              </div>
+              <div class="ps-card">
+                <div class="ps-score">
+                  <span class="ps-score-num">2 840</span>
+                  <span class="ps-streak">🔥 12</span>
+                </div>
+              </div>
+              <div class="ps-ci">
+                <div class="ps-ci-label">✦ CIRCL COACH</div>
+                <div class="ps-ci-q">Hier tu as coché 2h malgré la fatigue. Comment tu te sens aujourd'hui ?</div>
+              </div>
+              <div class="ps-card">
+                <div class="ps-bar-wrap">
+                  <div style="font-size:7px;font-weight:700;color:white;margin-bottom:4px">Objectif hebdo — 20h</div>
+                  <div class="ps-bar-track"><div class="ps-bar-fill"></div></div>
+                  <div class="ps-bar-label"><span>12h / 20h</span><span>60%</span></div>
+                </div>
+                <div class="ps-members" style="margin-top:6px">
+                  <div class="ps-av" style="background:#9333EA">T</div>
+                  <div class="ps-av" style="background:#38BDF8">C</div>
+                  <div class="ps-av" style="background:#3DD68C">M</div>
+                  <div class="ps-av" style="background:#F5A623">S</div>
+                  <div class="ps-av" style="background:#4D4B70;opacity:.4">+3</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-around;padding:7px 0 10px;border-top:1px solid rgba(255,255,255,.05);font-size:11px">
+              <span>🏠</span><span>👥</span><span style="filter:drop-shadow(0 0 4px #38BDF8)">🏆</span><span>📊</span><span>👤</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone 2 — Chat -->
+      <div class="phone-mock phone-mock-2">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="ps-grad" style="background:linear-gradient(160deg,#0D1225,#121028 50%,#1A0D20)">
+            <div style="position:absolute;width:200px;height:200px;bottom:-30px;left:-30px;background:radial-gradient(circle,rgba(147,51,234,.2),transparent 70%);pointer-events:none"></div>
+            <!-- chat header -->
+            <div style="background:rgba(19,18,42,.9);padding:42px 12px 10px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:7px;flex-shrink:0">
+              <div style="width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#9333EA,#38BDF8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;flex-shrink:0">F</div>
+              <div>
+                <div style="font-size:10px;font-weight:700;color:white">Focus Achievers</div>
+                <div style="font-size:7px;color:rgba(255,255,255,.4)">7 membres</div>
+              </div>
+              <div style="margin-left:auto;display:flex;align-items:center;gap:3px;background:rgba(61,214,140,.1);border:1px solid rgba(61,214,140,.3);border-radius:15px;padding:2px 6px">
+                <div style="width:4px;height:4px;border-radius:50%;background:#3DD68C"></div>
+                <span style="font-size:6px;font-weight:700;color:#3DD68C">Live</span>
+              </div>
+            </div>
+            <div class="chat-msg" style="flex:1;overflow:hidden;padding:8px 10px;justify-content:flex-end">
+              <div>
+                <div class="msg-author">Camille</div>
+                <div class="msg-them">Check-in fait ! 6h de code 🚀</div>
+              </div>
+              <div style="margin-top:5px">
+                <div class="msg-author">Marc</div>
+                <div class="msg-them">Streak 14 jours ! 🎉</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;margin-top:5px">
+                <div class="msg-me">Incroyable 💪 on tient le cap !</div>
+              </div>
+              <div style="margin-top:5px">
+                <div class="msg-author">Sophie</div>
+                <div class="msg-them">Énergie 9/10 aujourd'hui 🔥</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;margin-top:3px">
+                <div class="msg-me">Let's go 🙌</div>
+                <div style="font-size:6px;color:rgba(255,255,255,.3);margin-top:1px">09:41</div>
+              </div>
+            </div>
+            <div class="chat-input">
+              <div class="chat-field">Message...</div>
+              <div class="chat-send">➤</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ COMMUNITY ══════════════ -->
+<section id="community">
+  <div class="community-inner">
+    <div class="section-tag" style="justify-content:center">Communauté</div>
+    <h2 class="section-title" style="font-size:clamp(36px,5vw,54px)">Des vraies personnes,<br>de vrais <span style="background:linear-gradient(90deg,var(--purple-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent">résultats</span></h2>
+
+    <div class="avatars-grid">
+      <div class="av-big"><img src="assets/h2.jpg" alt="avatar"></div>
+      <div class="av-big"><img src="assets/f2.jpg" alt="avatar"></div>
+      <div class="av-big"><img src="assets/h3.jpg" alt="avatar"></div>
+      <div class="av-big"><img src="assets/f3.jpg" alt="avatar"></div>
+      <div class="av-big"><img src="assets/h4.jpg" alt="avatar"></div>
+      <div class="av-big"><img src="assets/lo.avif" alt="avatar"></div>
+      <div class="av-count">+2.8k</div>
+    </div>
+    <p style="color:var(--sub);font-size:14px;margin-top:4px">Membres actifs dans la bêta</p>
+
+    <div class="testimonials">
+      <div class="testi-card" style="transition-delay:.05s">
+        <div class="testi-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p class="testi-text">"Circl a changé ma façon de m'entraîner. Savoir que mes coéquipiers voient mon check-in me pousse à ne jamais manquer un jour."</p>
+        <div class="testi-author">
+          <div class="testi-av"><img src="assets/lo.avif" alt="avatar"></div>
+          <div>
+            <div class="testi-name">Théo M.</div>
+            <div class="testi-handle">Fitness · streak 🔥 34 jours</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card" style="transition-delay:.1s">
+        <div class="testi-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p class="testi-text">"Le coach IA est bluffant. Il se souvient de mes humeurs de la semaine et adapte ses questions. Jamais vu ça dans une app."</p>
+        <div class="testi-author">
+          <div class="testi-av"><img src="assets/f1.jpg" alt="avatar"></div>
+          <div>
+            <div class="testi-name">Camille D.</div>
+            <div class="testi-handle">Productivité · streak 🔥 21 jours</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card" style="transition-delay:.15s">
+        <div class="testi-stars"><span>★</span><span>★</span><span>★</span><span>★</span><span>★</span></div>
+        <p class="testi-text">"Mon groupe Focus Achievers est ma meilleure décision de l'année. On se tire vers le haut, chaque jour. Circl rend ça possible."</p>
+        <div class="testi-author">
+          <div class="testi-av"><img src="assets/h1.jpg" alt="avatar"></div>
+          <div>
+            <div class="testi-name">Marc L.</div>
+            <div class="testi-handle">Deep Work · streak 🔥 14 jours</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CTA ══════════════ -->
+<section id="cta">
+  <div class="cta-card">
+    <div class="cta-glow"></div>
+    <h2 class="cta-title">Prêt à rejoindre<br><span style="background:linear-gradient(135deg,var(--purple-light),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent">ton cercle ?</span></h2>
+    <p class="cta-sub">Télécharge Circl, crée ton groupe ou rejoins-en un, et commence ton premier check-in aujourd'hui.</p>
+    <div class="cta-actions">
+      <a href="https://youtu.be/hJoKOcnhYKQ?si=QxQDabS9I92Lagi3" class="store-btn">
+        <div class="store-icon"><img src="assets/apple.png" alt="App Store"></div>
+        <div class="store-label">
+          <span class="sub">Télécharger sur</span>
+          <span class="name">App Store</span>
+        </div>
+      </a>
+      <a href="https://youtu.be/hJoKOcnhYKQ?si=QxQDabS9I92Lagi3" class="store-btn">
+        <div class="store-icon"><img src="assets/play.png" alt="Google Play"></div>
+        <div class="store-label">
+          <span class="sub">Disponible sur</span>
+          <span class="name">Google Play</span>
+        </div>
+      </a>
+    </div>
+    <div class="cta-social">
+      <a href="https://www.tiktok.com/@circlapp0?_r=1&_t=ZN-94KKXVJ1Z02" target="_blank" class="cta-social-link">
+        <div class="cta-social-icon">
+          <svg viewBox="0 0 24 24" fill="white" width="18" height="18"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34l.01-8.42a8.16 8.16 0 0 0 4.77 1.52V4.95a4.85 4.85 0 0 1-1.02-.26z"/></svg>
+        </div>
+        @circlapp0
+      </a>
+      <div style="width:1px;height:24px;background:var(--muted)"></div>
+      <a href="https://www.instagram.com/circl_app0?igsh=MWNhMTQzYzh6MDYzbQ%3D%3D&utm_source=qr" target="_blank" class="cta-social-link">
+        <div class="cta-social-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="18" height="18" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </div>
+        @circl_app0
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer>
+  <div class="footer-logo">
+    <img src="assets/logo1.png" alt="Circl">
+    Circl
+  </div>
+  <div class="footer-copy">© 2026 Circl. Tous droits réservés.</div>
+  <div class="footer-links">
+    <a href="https://www.tiktok.com/@circlapp0?_r=1&_t=ZN-94KKXVJ1Z02" target="_blank">TikTok</a>
+    <a href="https://www.instagram.com/circl_app0?igsh=MWNhMTQzYzh6MDYzbQ%3D%3D&utm_source=qr" target="_blank">Instagram</a>
+    <a href="#">Confidentialité</a>
+  </div>
+</footer>
+
+<script>
+// ════════════════════════════════════════
+// CURSOR
+// ════════════════════════════════════════
+const cursor = document.getElementById('cursor');
+const trail = document.getElementById('cursor-trail');
+let mx=0,my=0,tx=0,ty=0;
+
+document.addEventListener('mousemove',(e)=>{
+  mx=e.clientX;my=e.clientY;
+  cursor.style.left=mx+'px';
+  cursor.style.top=my+'px';
+});
+
+// Smooth trail
+setInterval(()=>{
+  tx+=(mx-tx)*.12;
+  ty+=(my-ty)*.12;
+  trail.style.left=tx+'px';
+  trail.style.top=ty+'px';
+},16);
+
+document.querySelectorAll('a,button,.feat-card,.store-btn,.social-icon,.cta-social-link').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{
+    cursor.style.transform='translate(-50%,-50%) scale(2.5)';
+    cursor.style.background='rgba(56,189,248,.6)';
+    trail.style.borderColor='rgba(56,189,248,.6)';
+    trail.style.transform='translate(-50%,-50%) scale(1.5)';
+  });
+  el.addEventListener('mouseleave',()=>{
+    cursor.style.transform='translate(-50%,-50%) scale(1)';
+    cursor.style.background='var(--cyan)';
+    trail.style.borderColor='rgba(56,189,248,.4)';
+    trail.style.transform='translate(-50%,-50%) scale(1)';
+  });
+});
+
+// ════════════════════════════════════════
+// NAV SCROLL
+// ════════════════════════════════════════
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',scrollY>60);
+});
+
+// ════════════════════════════════════════
+// PARTICLE CANVAS
+// ════════════════════════════════════════
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+let W,H,particles=[];
+
+function resize(){
+  W=canvas.width=window.innerWidth;
+  H=canvas.height=window.innerHeight;
+}
+resize();
+window.addEventListener('resize',resize);
+
+class Particle{
+  constructor(){this.reset()}
+  reset(){
+    this.x=Math.random()*W;
+    this.y=Math.random()*H;
+    this.vx=(Math.random()-.5)*.3;
+    this.vy=(Math.random()-.5)*.3;
+    this.r=Math.random()*1.5+.3;
+    this.life=Math.random();
+    this.dlife=Math.random()*.005+.001;
+    const hues=['147,51,234','56,189,248','61,214,140','245,166,35'];
+    this.col=hues[Math.floor(Math.random()*hues.length)];
+  }
+  update(){
+    this.x+=this.vx;this.y+=this.vy;
+    this.life+=this.dlife;
+    if(this.x<0||this.x>W||this.y<0||this.y>H||this.life>1)this.reset();
+  }
+  draw(){
+    const a=Math.sin(this.life*Math.PI)*.6;
+    ctx.beginPath();
+    ctx.arc(this.x,this.y,this.r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${this.col},${a})`;
+    ctx.fill();
+  }
+}
+
+for(let i=0;i<120;i++)particles.push(new Particle());
+
+// Draw connections
+function drawConnections(){
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x;
+      const dy=particles[i].y-particles[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<100){
+        const a=(1-d/100)*.08;
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x,particles[i].y);
+        ctx.lineTo(particles[j].x,particles[j].y);
+        ctx.strokeStyle=`rgba(147,51,234,${a})`;
+        ctx.lineWidth=.5;
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animate(){
+  ctx.clearRect(0,0,W,H);
+  drawConnections();
+  particles.forEach(p=>{p.update();p.draw()});
+  requestAnimationFrame(animate);
+}
+animate();
+
+// ════════════════════════════════════════
+// SCROLL REVEAL + COUNTER
+// ════════════════════════════════════════
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.classList.add('visible');
+      observer.unobserve(e.target);
+    }
+  });
+},{threshold:.15});
+
+document.querySelectorAll('.feat-card,.stat-item,.testi-card,.showcase-item').forEach(el=>observer.observe(el));
+
+// Counter animation
+const counterObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.querySelectorAll('.stat-num').forEach(el=>{
+        const target=parseInt(el.dataset.target);
+        const suffix=el.dataset.suffix||'';
+        let current=0;
+        const duration=1800;
+        const step=target/(duration/16);
+        const timer=setInterval(()=>{
+          current=Math.min(current+step,target);
+          el.textContent=Math.floor(current).toLocaleString('fr')+suffix;
+          if(current>=target)clearInterval(timer);
+        },16);
+      });
+      counterObs.unobserve(e.target);
+    }
+  });
+},{threshold:.5});
+document.querySelectorAll('#stats').forEach(el=>counterObs.observe(el));
+
+// ════════════════════════════════════════
+// 3D CARD TILT
+// ════════════════════════════════════════
+document.querySelectorAll('.feat-card').forEach(card=>{
+  card.addEventListener('mousemove',(e)=>{
+    const rect=card.getBoundingClientRect();
+    const x=(e.clientX-rect.left)/rect.width-.5;
+    const y=(e.clientY-rect.top)/rect.height-.5;
+    card.style.transform=`translateY(-8px) scale(1.01) perspective(600px) rotateX(${-y*8}deg) rotateY(${x*8}deg)`;
+    const glow=card.querySelector('.feat-card-glow');
+    if(glow){
+      glow.style.left=(e.clientX-rect.left)+'px';
+      glow.style.top=(e.clientY-rect.top)+'px';
+    }
+  });
+  card.addEventListener('mouseleave',()=>{
+    card.style.transform='translateY(0) scale(1) perspective(600px) rotateX(0) rotateY(0)';
+  });
+});
+
+// ════════════════════════════════════════
+// MAGNETIC BUTTONS
+// ════════════════════════════════════════
+document.querySelectorAll('.btn-primary,.btn-secondary,.store-btn').forEach(btn=>{
+  btn.addEventListener('mousemove',(e)=>{
+    const rect=btn.getBoundingClientRect();
+    const x=e.clientX-rect.left-rect.width/2;
+    const y=e.clientY-rect.top-rect.height/2;
+    btn.style.transform=`translateX(${x*.15}px) translateY(${y*.15-3}px) scale(1.02)`;
+  });
+  btn.addEventListener('mouseleave',()=>{
+    btn.style.transform='';
+  });
+});
+
+// ════════════════════════════════════════
+// PARALLAX ORBS
+// ════════════════════════════════════════
+document.addEventListener('mousemove',(e)=>{
+  const x=(e.clientX/window.innerWidth-.5)*20;
+  const y=(e.clientY/window.innerHeight-.5)*20;
+  document.querySelectorAll('.orb').forEach((orb,i)=>{
+    const d=(i+1)*.4;
+    orb.style.transform+=` translate(${x*d}px,${y*d}px)`;
+  });
+});
+
+// Observe showcase items with stagger
+document.querySelectorAll('.si-vis-1,.si-vis-2,.si-vis-3').forEach(el=>{
+  new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){e.target.classList.add('visible')}
+    });
+  },{threshold:.2}).observe(el);
+});
+</script>
+
+</body>
+</html>
