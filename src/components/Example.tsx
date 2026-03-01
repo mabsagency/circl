@@ -25,7 +25,7 @@ interface ExampleCardProps {
 }
 
 function ExampleCard({ title, description, icon }: ExampleCardProps) {
-  const { ref, isVisible } = useIntersection()
+  const { ref, isVisible } = useIntersection<HTMLDivElement>()
 
   return (
     <div 
@@ -40,7 +40,7 @@ function ExampleCard({ title, description, icon }: ExampleCardProps) {
 }
 
 export default function Example() {
-  const { ref: sectionRef, isVisible } = useIntersection()
+  const { ref: sectionRef, isVisible } = useIntersection<HTMLElement>()
 
   const cards = [
     {
