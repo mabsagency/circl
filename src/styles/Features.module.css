@@ -1,0 +1,212 @@
+.features {
+  position: relative;
+  z-index: 2;
+  padding: 120px 48px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--purple-light);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+.sectionTag::before {
+  content: '';
+  width: 24px;
+  height: 1.5px;
+  background: var(--purple-light);
+}
+
+.sectionTitle {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1.05;
+  margin-bottom: 16px;
+}
+
+.sectionSub {
+  font-size: 17px;
+  color: var(--sub);
+  max-width: 480px;
+  line-height: 1.6;
+}
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-top: 64px;
+}
+
+.featCard {
+  position: relative;
+  overflow: hidden;
+  background: rgba(13, 12, 31, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 24px;
+  padding: 36px;
+  backdrop-filter: blur(20px);
+  transition: all 0.4s;
+  opacity: 0;
+  transform: translateY(40px);
+}
+
+.featCard.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.featCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.featCard:hover {
+  transform: translateY(-8px) scale(1.01);
+  border-color: rgba(147, 51, 234, 0.35);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(147, 51, 234, 0.1);
+}
+
+.featCard:hover::before {
+  opacity: 1;
+}
+
+.featCard {
+  transform-style: preserve-3d;
+}
+
+.featCardGlow {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  filter: blur(60px);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+}
+
+.featCard:hover .featCardGlow {
+  opacity: 0.6;
+}
+
+.featIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin-bottom: 24px;
+  position: relative;
+}
+
+.featIcon::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 17px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+}
+
+.fi1 {
+  background: rgba(147, 51, 234, 0.15);
+  box-shadow: 0 0 24px rgba(147, 51, 234, 0.2);
+}
+
+.fi2 {
+  background: rgba(56, 189, 248, 0.12);
+  box-shadow: 0 0 24px rgba(56, 189, 248, 0.15);
+}
+
+.fi3 {
+  background: rgba(61, 214, 140, 0.12);
+  box-shadow: 0 0 24px rgba(61, 214, 140, 0.15);
+}
+
+.fi4 {
+  background: rgba(245, 166, 35, 0.1);
+  box-shadow: 0 0 24px rgba(245, 166, 35, 0.1);
+}
+
+.fi5 {
+  background: rgba(244, 114, 182, 0.1);
+  box-shadow: 0 0 24px rgba(244, 114, 182, 0.1);
+}
+
+.fi6 {
+  background: rgba(129, 140, 248, 0.1);
+  box-shadow: 0 0 24px rgba(129, 140, 248, 0.1);
+}
+
+.featTitle {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  letter-spacing: -0.4px;
+}
+
+.featDesc {
+  font-size: 14px;
+  color: var(--sub);
+  line-height: 1.65;
+}
+
+.featTag {
+  display: inline-flex;
+  margin-top: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.ftNew {
+  background: rgba(61, 214, 140, 0.12);
+  color: var(--green);
+  border: 1px solid rgba(61, 214, 140, 0.25);
+}
+
+.ftAi {
+  background: rgba(147, 51, 234, 0.12);
+  color: var(--purple-light);
+  border: 1px solid rgba(147, 51, 234, 0.25);
+}
+
+.ftLive {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--blue);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+@media (max-width: 900px) {
+  .features {
+    padding: 80px 24px;
+  }
+
+  .sectionTitle {
+    font-size: clamp(28px, 4vw, 42px);
+  }
+}
